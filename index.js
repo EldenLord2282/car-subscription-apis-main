@@ -10,7 +10,7 @@ import morgan from 'morgan';
 dotenv.config();
 const app = express();
 app.use(cors({                        
-  origin: ["http://localhost:5173","http://192.168.51.30:5173","https://car-rental-65i5t1qnd-eldenlord2282s-projects.vercel.app"],
+  origin: ["http://localhost:5173","http://192.168.51.30:5173","https://car-rental-five-pink.vercel.app"],
   credentials: true,
 }));
 app.use(express.json());
