@@ -1,0 +1,30 @@
+import express from 'express';
+import dotenv from "dotenv";
+import routes from "./app/routes/index.js";
+import connect from "./app/config/dbConfig.js";
+import mediaRoutes from "./app/routes/media.js"
+import cors from "cors";
+import "./app/cron/subscription.js";
+import cloudinary from './app/config/cloudinary.js';
+import morgan from 'morgan';
+dotenv.config();
+const app = express();
+app.use(cors({                        
+  origin: ["http://localhost:5173","http://192.168.51.30:5173","https://car-rental-ivp1pkz5h-eldenlord2282s-projects.vercel.app/"],
+  credentials: true,
+}));
+app.use(express.json());
+app.use(morgan("dev"));
+const port=process.env.PORT;
+const host=process.env.HOST
+routes(app);
+mediaRoutes(app);
+connect();
+
+app.get("/",(req,res)=>{
+    res.send("Car Subscription apis.")
+})
+
+app.listen(port,host, ()=>{
+    console.log(`Server is running on http://${host}:${port}`)
+})
