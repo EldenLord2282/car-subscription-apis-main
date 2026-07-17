@@ -3,7 +3,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken"
 import uservalid from "../../validators/uservalidation.js";
 import Cars from "../../models/car/car.js";
-import {sendResponse} from "../../utils/handleresponse.js";
+import { sendResponse } from "../../utils/handleresponse.js";
 import mongoose from "mongoose";
 import Subscriptions from "../../models/subscription/subscription.js";
 import razorpayInstance from "../../config/razor.js";
@@ -15,7 +15,7 @@ dotenv.config();
 
 export const getCars = async (req, res) => {
     try {
-        const { brand, model,search  } = req.query;
+        const { brand, model, search } = req.query;
 
         const filter = { availability_status: 'available' };
 
@@ -36,86 +36,86 @@ export const getCars = async (req, res) => {
         const car = await Cars.find(filter);
 
         if (car.length === 0) {
-            return sendResponse(res,200,null,"No car available at this time");
+            return sendResponse(res, 200, [], "No car available at this time");
         }
-        return sendResponse(res,200,car);
+        return sendResponse(res, 200, car);
 
     } catch (error) {
-        return sendResponse(res,500,null,error.message);
+        return sendResponse(res, 500, null, error.message);
 
     }
 };
 
 
 export const subscription = async (req, res) => {
-  try {
-    const userid = req.user.id;
-    const { carid, months, startdate, address } = req.body;
+    try {
+        const userid = req.user.id;
+        const { carid, months, startdate, address } = req.body;
 
-    const car = await Cars.findById(carid);
-    if (!car) {
-      return res.status(404).json({ success: false, message: "Car not found" });
-    }
+        const car = await Cars.findById(carid);
+        if (!car) {
+            return res.status(404).json({ success: false, message: "Car not found" });
+        }
 
-    const user = await User.findById(userid);
-    if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
-    }
-    const startDate = new Date(startdate);
-    const endDate = new Date(startDate);
-    endDate.setMonth(endDate.getMonth() + Number(months));
+        const user = await User.findById(userid);
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
+        const startDate = new Date(startdate);
+        const endDate = new Date(startDate);
+        endDate.setMonth(endDate.getMonth() + Number(months));
 
-    const m = Number(months);
-    
-    const totalprice = m * Number(car.monthlyprice);
-       // Razorpay amount is in paise
+        const m = Number(months);
+
+        const totalprice = m * Number(car.monthlyprice);
+        // Razorpay amount is in paise
         const options = {
             amount: totalprice * 100,
             currency: "INR",
             receipt: `receipt_${Date.now()}`
         };
 
-      const order = await razorpayInstance.orders.create(options);
+        const order = await razorpayInstance.orders.create(options);
 
-      const newSubscription = new Subscriptions({
-        carId: car._id,
-        carname: car.carname,
-        carRegistrationnumber: car.registration_number, 
-        monthlyprice: String(car.monthlyprice),
-        userId: user._id,
-        username: user.name,
-        userphone: user.phone, 
-        startDate: startDate,
-        endDate: endDate,
-        addredss: address,
-        total_price: String(totalprice),
-        status: "pending",
-          razorpayOrderId: order.id,
+        const newSubscription = new Subscriptions({
+            carId: car._id,
+            carname: car.carname,
+            carRegistrationnumber: car.registration_number,
+            monthlyprice: String(car.monthlyprice),
+            userId: user._id,
+            username: user.name,
+            userphone: user.phone,
+            startDate: startDate,
+            endDate: endDate,
+            addredss: address,
+            total_price: String(totalprice),
+            status: "pending",
+            razorpayOrderId: order.id,
 
-              paymentStatus: "pending",
-      });
-      await newSubscription.save();
-    //   const transporter = nodemailer.createTransport({
-    //       service: 'gmail', 
-    //       auth: {
-    //           user: process.env.EMAIL_USER, 
-    //           pass: process.env.EMAIL_PASS  
-    //       }
-    //   });
+            paymentStatus: "pending",
+        });
+        await newSubscription.save();
+        //   const transporter = nodemailer.createTransport({
+        //       service: 'gmail', 
+        //       auth: {
+        //           user: process.env.EMAIL_USER, 
+        //           pass: process.env.EMAIL_PASS  
+        //       }
+        //   });
 
-    //   const mailOptions = {
-    //       from: `"Car Rental Support" <${process.env.EMAIL_USER}>`,
-    //       to: user.email, 
-    //       subject: 'Subscription Created Successfully'
-    //   };
-    //   await transporter.sendMail(mailOptions);
-      
-    return sendResponse(res,200,newSubscription,"Subscription created successfully");
+        //   const mailOptions = {
+        //       from: `"Car Rental Support" <${process.env.EMAIL_USER}>`,
+        //       to: user.email, 
+        //       subject: 'Subscription Created Successfully'
+        //   };
+        //   await transporter.sendMail(mailOptions);
 
-  } catch (err) {
-    console.log(err);
-    res.status(500).json({ success: false, message: err.message });
-  }
+        return sendResponse(res, 200, newSubscription, "Subscription created successfully");
+
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ success: false, message: err.message });
+    }
 };
 
 
